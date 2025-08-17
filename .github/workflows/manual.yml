@@ -1,0 +1,61 @@
+# This is a basic workflow that is manually triggered
+
+name: Greeting
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      name:
+        # Friendly description to be shown in the UI instead of 'name'
+        description: "Person to greet"
+        # Default value if no value is explicitly provided
+        default: "World"
+        # Input has to be provided for the workflow to run
+        required: true
+        # The data type of the input
+        type: string
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build
+        run: yarn run build
+      - name: upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./dist
+          name: github-pages
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: output4
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
